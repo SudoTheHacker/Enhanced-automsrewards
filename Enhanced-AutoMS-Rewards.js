@@ -11,7 +11,7 @@
 
 (function () {
     'use strict';
-    let mobile = GM_getValue("mobile", true);
+    let mobile = GM_getValue("mobile", false);
     if (mobile) {
         Object.defineProperty(navigator, 'userAgent', {
             get: function () { return 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3.1 Mobile/15E148 Safari/604.'; }
@@ -32,8 +32,7 @@
     let activated = GM_getValue("activated", false);
     if (activated) {
         document.getElementById("search").innerHTML = "Stop"
-        if (count > 0)
-        {
+        if (count > 0) {
             search()
         } else {
             GM_setValue("activated", false)
@@ -45,43 +44,46 @@
     function getRandomWords() { let num; let out; const rand = Math.floor(Math.random() * 10) + 1; num = Math.floor(Math.random() * words.length); out = words[num]; for (let i = 1; i <= rand; i++) { num = Math.floor(Math.random() * words.length); out = out + " " + words[num] } return out; }
     function getRandomQueries() { return queries[Math.floor(Math.random() * queries.length)] }
     function search() {
-        window.scroll({
-            top: Math.floor(Math.random() * document.body.scrollHeight),
-            behavior: 'smooth'
-        });
         setTimeout(() => {
-            let query;
-            if (type == "random") {
-                query = getRandomWords();
-            } else {
-                query = getRandomQueries();
-            }
-            if (mobile) {
-                Object.defineProperty(navigator, 'userAgent', {
-                    get: function () { return 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3.1 Mobile/15E148 Safari/604.'; }
-                });
-            }
-            let sb_form_q = document.getElementById("sb_form_q");
-            let i = 0;
-            sb_form_q.value = "";
-            const intervalId = setInterval(() => {
-                sb_form_q.value += query[i];
-                i++;
-                if (i >= query.length) {
-                    clearInterval(intervalId);
-                    const enter = new KeyboardEvent("keydown", {
-                        key: "Enter",
-                        code: "Enter",
-                        keyCode: 13,
-                        which: 13
-                    });
-                    sb_form_q.dispatchEvent(enter);
-                    count = count - 1
-                    GM_setValue("count", count)
+            window.scroll({
+                top: Math.floor(Math.random() * document.body.scrollHeight),
+                behavior: 'smooth'
+            });
+            setTimeout(() => {
+                let query;
+                if (type == "random") {
+                    query = getRandomWords();
+                } else {
+                    query = getRandomQueries();
                 }
-            }, Math.floor(Math.random() * 50) + 10);
+                if (mobile) {
+                    Object.defineProperty(navigator, 'userAgent', {
+                        get: function () { return 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3.1 Mobile/15E148 Safari/604.'; }
+                    });
+                }
+                let sb_form_q = document.getElementById("sb_form_q");
+                let i = 0;
+                sb_form_q.value = "";
+                const intervalId = setInterval(() => {
+                    sb_form_q.value += query[i];
+                    i++;
+                    if (i >= query.length) {
+                        clearInterval(intervalId);
+                        const enter = new KeyboardEvent("keydown", {
+                            key: "Enter",
+                            code: "Enter",
+                            keyCode: 13,
+                            which: 13
+                        });
+                        sb_form_q.dispatchEvent(enter);
+                        count = count - 1
+                        GM_setValue("count", count)
+                    }
+                }, Math.floor(Math.random() * 50) + 10);
 
-        }, Math.floor(Math.random() * 10000) + 3000)
+            }, Math.floor(Math.random() * 10000) + 3000)
+        }, 1000)
+
 
     }
     document.getElementById("search").addEventListener("click", () => {
@@ -91,7 +93,7 @@
             mobile = document.getElementById("mobile").checked;
             GM_setValue("mobile", mobile)
             count = document.getElementById("num_of_search").value;
-            GM_setValue("count", count+1);
+            GM_setValue("count", count + 1);
             GM_setValue("activated", true);
             search()
         } else {
