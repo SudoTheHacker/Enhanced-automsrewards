@@ -16,6 +16,47 @@
         function delay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
+        async function waitForElementById(id, parent = document) { // These are used to fixed the mobile problem, but apparently that doesn't work...  I will jump of a bridge jk
+            const element = await new Promise(resolve => {
+                const intervalId = setInterval(() => {
+                    const el = parent.getElementById(id);
+                    if (el) {
+                        clearInterval(intervalId);
+                        resolve(el);
+                    }
+                }, 100);
+            });
+            return element;
+        }
+        async function waitForClass(className, parent = document) {
+            const elements = await new Promise(resolve => {
+                const intervalId = setInterval(() => {
+                    const els = parent.getElementsByClassName(className);
+                    if (els.length > 0) {
+                        clearInterval(intervalId);
+                        resolve(els);
+                    }
+                }, 100);
+            });
+            return elements;
+        }
+        async function waitForTagName(tagName, parent = document) {
+            const elements = await new Promise(resolve => {
+                const intervalId = setInterval(() => {
+                    const els = parent.getElementsByTagName(tagName);
+                    if (els.length > 0) {
+                        clearInterval(intervalId);
+                        resolve(els);
+                    }
+                }, 100);
+            });
+            return elements;
+        }
+
+        function isMobile() { // lets try this then...
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
         async function search() {
             await delay(Math.floor(Math.random() * 300))
             window.scrollTo({
@@ -28,7 +69,8 @@
                 left: 0,
                 behavior: 'smooth'
             });
-            let search_form = document.getElementById("sb_form_q");
+            let search_form = await waitForElementById("sb_form_q");
+            console.log(search_form)
             let query = queries[Math.floor(Math.random() * queries.length - 1)]
             search_form.click()
             search_form.value = ""
@@ -36,11 +78,13 @@
                 search_form.value += query[i];
                 await delay(Math.floor(Math.random() * 100) + 50);
             }
+            // document.getElementById("sb_form_go").click()
             search_form.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13 }));
         }
-        let bar = document.getElementsByClassName("b_scopebar")[0].getElementsByTagName("ul")[0]
-        bar.innerHTML = bar.innerHTML + `<li><a id="overlaybtn">Auto-MSRE</a></li><li><p id="count">0</p></li>`
-        document.body.innerHTML = document.body.innerHTML + `<div id='overlay' class='hide'>
+        if (!isMobile()) {
+            let bar = await waitForTagName("ul", (await waitForClass("b_scopebar")[0]))
+            bar[0].innerHTML = `<li><a id="overlaybtn">Auto-MSRE</a></li><li><p id="count">0</p></li>` + bar[0].innerHTML
+            document.body.innerHTML = document.body.innerHTML + `<div id='overlay' class='hide'>
     <div id='overlay-content'>
         <button id='closeOverlay'>X</button>
         <h2>Auto-MSRE</h2>
@@ -50,7 +94,7 @@
         <p>For mobile spoofing, simply use an extension allowing to change the User-Agent. The stop button only takes effect in the next search.</p>
     </div>
 </div>`
-        document.head.innerHTML = document.head.innerHTML + `<style>
+            document.head.innerHTML = document.head.innerHTML + `<style>
 #overlay {position: fixed;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0, 0, 0, 0.5);display: flex;justify-content: center;align-items: center;z-index: 9999;}
 #overlay-content {background: #fff;border-radius: 8px;padding: 5%;width: 50%;max-width: 90%;text-align: center;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);}
 #overlay-content h2 {margin-top: 0;}
@@ -59,6 +103,31 @@
 #closeOverlay {position: absolute;top: 10px;right: 10px;background: transparent;border: none;font-size: 18px;cursor: pointer;}
 #overlay.hide {display: none;}#overlaybtn {cursor: pointer;}
 </style>`
+        } else {
+            document.body.innerHTML = document.body.innerHTML + `<div id="overlaybtn">
+    <p id="count">0</p>
+</div>
+<div id='overlay' class='hide'>
+    <div id='overlay-content'>
+        <button id='closeOverlay'>X</button>
+        <h2>Auto-MSRE</h2>
+        <p>Warning: This breaks MSR Term's of Service and is easily detectable.<b> USE AT YOUR OWN RISK</b></p>
+        <input type='number' name='quantity' id='quantity' value='30' min='1' max='90' step='1'/>
+        <button id="mssearch">Search</button>
+        <p>For mobile spoofing, simply use an extension allowing to change the User-Agent.</p>
+    </div>
+</div>`
+            document.head.innerHTML = document.head.innerHTML + `<style>
+#overlay {position: fixed;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0, 0, 0, 0.5);display: flex;justify-content: center;align-items: center;z-index: 9999;}
+#overlay-content {background: #fff;border-radius: 8px;padding: 5%;width: 50%;max-width: 90%;text-align: center;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);}
+#overlay-content h2 {margin-top: 0;}
+#overlay-content button {padding: 1vh 4vw;background-color: #007bff;border: none;color: #fff;border-radius: 4px;cursor: pointer;font-size: 1.7vh;}
+#overlay-content button:hover {background-color: #0060c7;}
+#closeOverlay {position: absolute;top: 10px;right: 10px;background: transparent;border: none;font-size: 18px;cursor: pointer;}
+#overlay.hide {display: none;}#overlaybtn {cursor: pointer;}
+#overlaybtn {position: fixed;bottom: 20px;left: 20px;width: 80px;height: 80px;background-color: #007BFF;border-radius: 50%;z-index: 9999;display: flex;justify-content: center;align-items: center;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);}
+</style>`
+        }
         let count = await GM.getValue("count", 0);
         document.getElementById("count").innerHTML = count;
         document.getElementById("quantity").addEventListener('input', function () { if (this.value.includes('.')) { this.value = Math.floor(this.value); } })
